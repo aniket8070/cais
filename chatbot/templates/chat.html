@@ -1,0 +1,906 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CAIS – Current Affairs Intelligence System</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  height: 100%; overflow: hidden;
+  font-family: 'Inter', -apple-system, sans-serif;
+  font-size: 14px; background: #fff; color: #1a1a1a;
+  -webkit-font-smoothing: antialiased;
+}
+body { display: flex; }
+
+/* SIDEBAR */
+#sidebar {
+  width: 260px; min-width: 260px; height: 100vh;
+  background: #f7f7f5; border-right: 1px solid #e8e8e6;
+  display: flex; flex-direction: column; overflow: hidden;
+}
+.s-brand-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 13px 12px 11px; border-bottom: 1px solid #e8e8e6; flex-shrink: 0;
+}
+.s-brand { display: flex; align-items: center; gap: 9px; text-decoration: none; color: #1a1a1a; }
+.s-logo-box {
+  width: 28px; height: 28px; border-radius: 7px; background: #1a1a1a;
+  overflow: hidden; flex-shrink: 0; display: flex; align-items: center;
+  justify-content: center; font-size: 11px; font-weight: 700; color: #fff;
+}
+.s-logo-box img { width: 28px; height: 28px; object-fit: cover; }
+.s-name { font-size: 15px; font-weight: 600; }
+.s-newbtn {
+  width: 28px; height: 28px; background: transparent; border: 1px solid #e5e5e3;
+  border-radius: 7px; color: #888; cursor: pointer; display: flex;
+  align-items: center; justify-content: center; flex-shrink: 0; transition: background .15s;
+}
+.s-newbtn:hover { background: #efefed; color: #1a1a1a; }
+.s-section {
+  font-size: 11px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: .7px; color: #aaa; padding: 14px 12px 6px;
+}
+.s-history { flex: 1; overflow-y: auto; padding: 0 6px; }
+.s-history::-webkit-scrollbar { width: 3px; }
+.s-history::-webkit-scrollbar-thumb { background: #ddd; border-radius: 3px; }
+.s-hist-item {
+  display: flex; align-items: center; gap: 7px; padding: 7px 9px;
+  border-radius: 7px; cursor: pointer; font-size: 13px; color: #666;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  transition: background .12s, color .12s;
+}
+.s-hist-item:hover { background: #efefed; color: #1a1a1a; }
+.s-hist-item svg { flex-shrink: 0; opacity: .5; }
+.s-no-hist { font-size: 12px; color: #bbb; padding: 6px 12px; font-style: italic; }
+.s-footer { border-top: 1px solid #e8e8e6; padding: 8px 6px 12px; flex-shrink: 0; }
+.s-foot-item {
+  display: flex; align-items: center; gap: 9px; padding: 7px 9px;
+  border-radius: 7px; font-size: 13px; color: #666; cursor: pointer;
+  transition: background .12s, color .12s;
+}
+.s-foot-item:hover { background: #efefed; color: #1a1a1a; }
+
+/* MAIN */
+#main {
+  flex: 1; display: flex; flex-direction: column;
+  height: 100vh; overflow: hidden; background: #fff; min-width: 0;
+}
+
+/* TOPBAR */
+#topbar {
+  height: 56px; border-bottom: 1px solid #e5e5e3;
+  display: flex; align-items: center; padding: 0 20px;
+  flex-shrink: 0; position: relative;
+}
+.t-model {
+  display: flex; align-items: center; gap: 6px; padding: 5px 12px;
+  background: #f4f4f2; border: 1px solid #e5e5e3; border-radius: 20px;
+  font-size: 12px; font-weight: 500; color: #666;
+}
+.t-center-title {
+  position: absolute; left: 50%; transform: translateX(-50%);
+  font-size: 18px; font-weight: 700; color: #1a1a1a;
+  letter-spacing: -0.4px; white-space: nowrap; pointer-events: none;
+}
+.t-right { margin-left: auto; display: flex; gap: 4px; }
+.t-btn {
+  width: 32px; height: 32px; background: transparent; border: none;
+  border-radius: 7px; color: #aaa; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .12s, color .12s;
+}
+.t-btn:hover { background: #f4f4f2; color: #1a1a1a; }
+
+/* CHAT SCROLL */
+#chatScroll { flex: 1; overflow-y: auto; position: relative; }
+#chatScroll::-webkit-scrollbar { width: 4px; }
+#chatScroll::-webkit-scrollbar-thumb { background: #e0e0de; border-radius: 4px; }
+#watermark {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  width: 160px; height: 160px; pointer-events: none; z-index: 0;
+  opacity: 0.045; display: flex; align-items: center; justify-content: center;
+}
+#watermark img { width: 160px; height: 160px; object-fit: contain; }
+
+/* WELCOME */
+#welcome {
+  position: relative; z-index: 1; display: flex; flex-direction: column;
+  align-items: center; text-align: center; padding: 52px 24px 28px;
+}
+.w-logo {
+  width: 48px; height: 48px; border-radius: 12px; background: #1a1a1a;
+  overflow: hidden; display: flex; align-items: center; justify-content: center;
+  font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 18px; flex-shrink: 0;
+}
+.w-logo img { width: 48px; height: 48px; object-fit: cover; }
+.w-title { font-size: 22px; font-weight: 600; margin-bottom: 8px; letter-spacing: -.3px; }
+.w-sub { font-size: 14px; color: #666; max-width: 360px; line-height: 1.6; margin-bottom: 28px; }
+.w-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; max-width: 540px; width: 100%; }
+.w-card {
+  background: #fff; border: 1px solid #e5e5e3; border-radius: 12px;
+  padding: 13px 14px; cursor: pointer; text-align: left;
+  display: flex; align-items: flex-start; gap: 11px; font-family: inherit;
+  transition: background .15s, border-color .15s, box-shadow .15s;
+}
+.w-card:hover { background: #f4f4f2; border-color: #d0d0ce; box-shadow: 0 2px 8px rgba(0,0,0,.06); }
+.w-card-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+.w-card-title { font-size: 13px; font-weight: 600; color: #1a1a1a; margin-bottom: 2px; }
+.w-card-desc  { font-size: 12px; color: #666; line-height: 1.4; }
+
+/* MESSAGES */
+#messages { position: relative; z-index: 1; max-width: 760px; margin: 0 auto; padding: 8px 24px 24px; display: flex; flex-direction: column; }
+.msg-row { display: flex; flex-direction: column; padding: 14px 0; }
+.msg-row.user { align-items: flex-end; }
+.msg-row.ai   { align-items: flex-start; }
+.user-bub {
+  background: #f0f0ee; border: 1px solid #e5e5e3; border-radius: 16px;
+  border-bottom-right-radius: 4px; padding: 11px 15px; font-size: 14px;
+  line-height: 1.65; max-width: 80%; word-wrap: break-word;
+}
+.ai-head { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.ai-icon {
+  width: 22px; height: 22px; border-radius: 6px; background: #1a1a1a;
+  overflow: hidden; flex-shrink: 0; display: flex; align-items: center;
+  justify-content: center; font-size: 9px; font-weight: 700; color: #fff;
+}
+.ai-icon img { width: 22px; height: 22px; object-fit: cover; }
+.ai-name { font-size: 13px; font-weight: 600; }
+.ai-body { font-size: 14px; line-height: 1.78; color: #1a1a1a; max-width: 100%; word-wrap: break-word; }
+.ai-body h2 { font-size: 15px; font-weight: 700; margin: 16px 0 8px; color: #1a1a1a; border-bottom: 2px solid #e5e5e3; padding-bottom: 5px; }
+.ai-body h3 { font-size: 14px; font-weight: 600; margin: 12px 0 5px; padding-bottom: 4px; border-bottom: 1px solid #e5e5e3; }
+.ai-body ul { padding-left: 20px; margin: 6px 0 10px; }
+.ai-body li { margin: 5px 0; color: #444; line-height: 1.7; }
+.ai-body strong { color: #1a1a1a; font-weight: 600; }
+.ai-body p { margin-bottom: 10px; }
+.msg-acts { display: flex; gap: 4px; margin-top: 7px; opacity: 0; transition: opacity .15s; }
+.msg-row:hover .msg-acts { opacity: 1; }
+.act-btn {
+  display: flex; align-items: center; gap: 4px; padding: 4px 9px;
+  background: transparent; border: 1px solid #e5e5e3; border-radius: 6px;
+  color: #aaa; font-size: 11px; font-family: inherit; cursor: pointer;
+  transition: background .12s, color .12s;
+}
+.act-btn:hover { background: #f4f4f2; color: #1a1a1a; }
+.dots { display: flex; gap: 5px; padding: 6px 0; }
+.dots span {
+  width: 6px; height: 6px; background: #c8c8c6; border-radius: 50%;
+  animation: dot 1.3s infinite ease-in-out;
+}
+.dots span:nth-child(2) { animation-delay: .14s; }
+.dots span:nth-child(3) { animation-delay: .28s; }
+@keyframes dot {
+  0%,80%,100% { transform: scale(.65); opacity: .3; }
+  40%          { transform: scale(1);   opacity: 1;  }
+}
+
+/* SECTOR PANEL */
+.sector-panel {
+  background: #fff; border: 1px solid #e5e5e3;
+  border-radius: 16px; padding: 18px 20px 20px; max-width: 100%;
+}
+.sector-panel-title {
+  font-size: 11px; font-weight: 600; color: #aaa;
+  text-transform: uppercase; letter-spacing: .7px; margin-bottom: 4px;
+}
+.sector-panel-file {
+  font-size: 14px; font-weight: 600; color: #1a1a1a;
+  margin-bottom: 14px; display: flex; align-items: center; gap: 7px;
+}
+.sector-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+.sec-btn {
+  display: flex; align-items: center; gap: 6px; padding: 8px 14px;
+  border: 1.5px solid #e5e5e3; border-radius: 20px; background: #fff;
+  font-family: inherit; font-size: 13px; font-weight: 500; color: #444;
+  cursor: pointer; transition: all .15s; white-space: nowrap;
+}
+.sec-btn:hover { background: #1a1a1a; color: #fff; border-color: #1a1a1a; box-shadow: 0 2px 8px rgba(0,0,0,.12); }
+.sec-btn.active { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
+.sec-btn.loading { opacity: .6; pointer-events: none; }
+.sector-detail-wrap { margin-top: 18px; border-top: 1px solid #e5e5e3; padding-top: 16px; }
+.sector-detail-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.sector-detail-title { font-size: 16px; font-weight: 700; color: #1a1a1a; display: flex; align-items: center; gap: 8px; }
+.back-btn {
+  font-size: 12px; color: #888; cursor: pointer; background: none;
+  border: 1px solid #e5e5e3; border-radius: 6px; padding: 4px 10px;
+  font-family: inherit; transition: all .12s;
+}
+.back-btn:hover { background: #f4f4f2; color: #1a1a1a; }
+
+/* ── ACTION BAR (Download + Email) ── */
+.action-bar {
+  display: none; /* JS ने show करतो */
+  align-items: center; gap: 8px; margin-top: 14px;
+  padding-top: 14px; border-top: 1px solid #e5e5e3; flex-wrap: wrap;
+}
+.action-bar.visible { display: flex; }
+.action-bar-label {
+  font-size: 11px; font-weight: 600; color: #aaa;
+  text-transform: uppercase; letter-spacing: .6px; margin-right: 4px;
+}
+.dl-btn {
+  display: flex; align-items: center; gap: 6px; padding: 7px 14px;
+  border-radius: 8px; font-family: inherit; font-size: 12px; font-weight: 600;
+  cursor: pointer; border: none; transition: all .15s; white-space: nowrap;
+}
+.dl-btn.pdf-btn {
+  background: #1a1a1a; color: #fff;
+}
+.dl-btn.pdf-btn:hover { background: #333; transform: translateY(-1px); box-shadow: 0 3px 10px rgba(0,0,0,.18); }
+.dl-btn.email-btn {
+  background: #fff; color: #1a1a1a; border: 1.5px solid #d0d0ce;
+}
+.dl-btn.email-btn:hover { background: #f4f4f2; border-color: #b5b5b3; transform: translateY(-1px); box-shadow: 0 3px 10px rgba(0,0,0,.08); }
+.dl-btn:disabled { opacity: .5; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
+
+/* ── EMAIL MODAL ── */
+#emailModal {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,.45); z-index: 9999;
+  align-items: center; justify-content: center;
+  backdrop-filter: blur(4px);
+}
+#emailModal.open { display: flex; }
+.modal-card {
+  background: #fff; border-radius: 16px; padding: 28px 28px 24px;
+  max-width: 420px; width: 92%; box-shadow: 0 16px 48px rgba(0,0,0,.18);
+  animation: modalIn .18s ease;
+}
+@keyframes modalIn { from { transform: scale(.94); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.modal-title { font-size: 17px; font-weight: 700; color: #1a1a1a; margin-bottom: 6px; }
+.modal-sub   { font-size: 13px; color: #777; margin-bottom: 20px; line-height: 1.5; }
+.modal-label { font-size: 12px; font-weight: 600; color: #555; margin-bottom: 6px; display: block; }
+.modal-input {
+  width: 100%; padding: 10px 13px; border: 1.5px solid #e0e0de;
+  border-radius: 9px; font-family: inherit; font-size: 14px; color: #1a1a1a;
+  outline: none; transition: border-color .15s;
+}
+.modal-input:focus { border-color: #1a1a1a; }
+.modal-check-row {
+  display: flex; align-items: center; gap: 9px;
+  margin-top: 13px; cursor: pointer;
+}
+.modal-check-row input[type=checkbox] {
+  width: 16px; height: 16px; cursor: pointer; accent-color: #1a1a1a;
+}
+.modal-check-label { font-size: 13px; color: #555; }
+.modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 22px; }
+.modal-cancel {
+  padding: 9px 18px; background: #fff; border: 1.5px solid #e0e0de;
+  border-radius: 9px; font-family: inherit; font-size: 13px; font-weight: 500;
+  color: #666; cursor: pointer; transition: background .12s;
+}
+.modal-cancel:hover { background: #f4f4f2; }
+.modal-send {
+  padding: 9px 22px; background: #1a1a1a; border: none;
+  border-radius: 9px; font-family: inherit; font-size: 13px; font-weight: 600;
+  color: #fff; cursor: pointer; transition: background .12s;
+}
+.modal-send:hover { background: #333; }
+.modal-send:disabled { opacity: .5; cursor: not-allowed; }
+.modal-status {
+  margin-top: 12px; font-size: 13px; text-align: center;
+  min-height: 20px; font-weight: 500;
+}
+.modal-status.ok  { color: #2d7a2d; }
+.modal-status.err { color: #c62828; }
+
+/* INPUT BAR */
+#inputBar { flex-shrink: 0; padding: 12px 22px 16px; background: #fff; }
+.inp-wrap {
+  max-width: 720px; margin: 0 auto; border: 1px solid #d0d0ce;
+  border-radius: 16px; background: #fff;
+  box-shadow: 0 2px 12px rgba(0,0,0,.07); overflow: hidden;
+  transition: border-color .2s, box-shadow .2s;
+}
+.inp-wrap:focus-within { border-color: #b5b5b3; box-shadow: 0 2px 18px rgba(0,0,0,.11); }
+.inp-top { display: flex; align-items: flex-end; gap: 8px; padding: 12px 12px 0; }
+textarea#userInput {
+  flex: 1; background: transparent; border: none; outline: none;
+  font-family: inherit; font-size: 14px; color: #1a1a1a;
+  resize: none; min-height: 24px; max-height: 160px; line-height: 1.55; padding: 0;
+}
+textarea#userInput::placeholder { color: #bbb; }
+.send-btn {
+  width: 32px; height: 32px; background: #1a1a1a; border: none;
+  border-radius: 9px; color: #fff; display: flex; align-items: center;
+  justify-content: center; cursor: pointer; flex-shrink: 0;
+  transition: opacity .15s, transform .1s;
+}
+.send-btn:hover { opacity: .8; }
+.send-btn:active { transform: scale(.93); }
+.inp-toolbar {
+  display: flex; align-items: center; gap: 6px;
+  padding: 8px 12px 10px; border-top: 1px solid #efefed;
+  margin-top: 8px; flex-wrap: wrap;
+}
+.tool-btn {
+  display: flex; align-items: center; gap: 5px; padding: 5px 11px;
+  background: transparent; border: 1px solid #e5e5e3; border-radius: 8px;
+  font-family: inherit; font-size: 12px; font-weight: 500; color: #666;
+  cursor: pointer; white-space: nowrap;
+  transition: background .12s, color .12s, border-color .12s;
+}
+.tool-btn:hover { background: #f4f4f2; color: #1a1a1a; border-color: #d0d0ce; }
+.gen-btn { background: #1a1a1a !important; color: #fff !important; border-color: #1a1a1a !important; }
+.gen-btn:hover { background: #333 !important; border-color: #333 !important; }
+.file-tag {
+  display: flex; align-items: center; gap: 5px; padding: 4px 10px;
+  background: #f0f7f6; border: 1px solid #b8dcd9; border-radius: 8px;
+  font-size: 12px; font-weight: 500; color: #2a6b65; max-width: 200px;
+}
+.file-tag span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 130px; }
+.file-tag button { background: none; border: none; cursor: pointer; color: inherit; padding: 0; line-height: 1; font-size: 12px; }
+.inp-hint { text-align: center; font-size: 11px; color: #ccc; margin-top: 8px; }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div id="sidebar">
+  <div class="s-brand-row">
+    <a class="s-brand" href="#">
+      <div class="s-logo-box">
+        <img src="{% static 'logo.png' %}" alt="CA" onerror="this.style.display='none';this.parentElement.textContent='CA'">
+      </div>
+      <span class="s-name">CAIS</span>
+    </a>
+    <button class="s-newbtn" onclick="newChat()" title="New chat">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <path d="M12 5v14M5 12h14"/>
+      </svg>
+    </button>
+  </div>
+  <div class="s-section">Recents</div>
+  <div class="s-history" id="historyList">
+    {% for chat in chats %}
+    <div class="s-hist-item">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+      </svg>
+      <span>{{ chat.message|truncatewords:5 }}</span>
+    </div>
+    {% empty %}
+    <p class="s-no-hist">No recent chats</p>
+    {% endfor %}
+  </div>
+  <div class="s-footer">
+    <div class="s-foot-item">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+      </svg>
+      {{ request.user.username }}
+    </div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div id="main">
+
+  <!-- TOPBAR -->
+  <div id="topbar">
+    <div class="t-model">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+      </svg>
+      Groq · LLaMA 3.3
+    </div>
+    <div class="t-center-title">Current Affairs Intelligence System</div>
+    <div class="t-right">
+      <button class="t-btn" onclick="newChat()" title="New Chat">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <div id="chatScroll">
+    <div id="watermark">
+      <img src="{% static 'logo.png' %}" alt="" onerror="this.style.display='none'">
+    </div>
+
+    <!-- WELCOME -->
+    <div id="welcome">
+      <div class="w-logo">
+        <img src="{% static 'logo.png' %}" alt="CA" onerror="this.style.display='none';this.parentElement.textContent='CA'">
+      </div>
+      <div class="w-title">How can CAIS help you?</div>
+      <div class="w-sub">Upload a newspaper PDF to get sector-wise notes, or ask any current affairs question.</div>
+      <div class="w-grid">
+        <button class="w-card" onclick="setP('What is Article 370 and its significance?')">
+          <span class="w-card-icon">🏛️</span>
+          <span>
+            <div class="w-card-title">Polity</div>
+            <div class="w-card-desc">Constitutional & governance</div>
+          </span>
+        </button>
+        <button class="w-card" onclick="document.getElementById('pdfInput').click()">
+          <span class="w-card-icon">📰</span>
+          <span>
+            <div class="w-card-title">Upload Newspaper</div>
+            <div class="w-card-desc">Get sector-wise notes</div>
+          </span>
+        </button>
+        <button class="w-card" onclick="setP('What are today\'s key environment news?')">
+          <span class="w-card-icon">🌿</span>
+          <span>
+            <div class="w-card-title">Environment</div>
+            <div class="w-card-desc">Latest eco updates</div>
+          </span>
+        </button>
+        <button class="w-card" onclick="setP('Summarize recent economic policy news')">
+          <span class="w-card-icon">📈</span>
+          <span>
+            <div class="w-card-title">Economy</div>
+            <div class="w-card-desc">Policy & finance news</div>
+          </span>
+        </button>
+      </div>
+    </div>
+
+    <div id="messages"></div>
+  </div>
+
+  <!-- INPUT BAR -->
+  <div id="inputBar">
+    <div class="inp-wrap">
+      <div class="inp-top">
+        <textarea id="userInput"
+          placeholder="Ask anything or paste current affairs text…"
+          rows="1"
+          onkeydown="onKey(event)"
+          oninput="grow(this)"></textarea>
+        <button class="send-btn" onclick="doSend()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="12" y1="19" x2="12" y2="5"/>
+            <polyline points="5 12 12 5 19 12"/>
+          </svg>
+        </button>
+      </div>
+      <div class="inp-toolbar">
+        <button class="tool-btn" onclick="document.getElementById('pdfInput').click()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+          </svg>
+          Attach PDF
+        </button>
+        <input type="file" id="pdfInput" accept=".pdf" onchange="onFile(this)" style="display:none">
+        <span class="file-tag" id="fileTag" style="display:none">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+          </svg>
+          <span id="fileLabel">file.pdf</span>
+          <button onclick="clearFile()">✕</button>
+        </span>
+        <button class="tool-btn gen-btn" id="genBtn" onclick="doUpload()" style="display:none">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="5 3 19 12 5 21 5 3"/>
+          </svg>
+          Generate Notes
+        </button>
+      </div>
+    </div>
+    <p class="inp-hint">CAIS can make mistakes. Verify important information.</p>
+  </div>
+</div>
+
+<!-- ── EMAIL MODAL ── -->
+<div id="emailModal">
+  <div class="modal-card">
+    <div class="modal-title">📧 Email Summary पाठवा</div>
+    <div class="modal-sub">आजच्या current affairs notes तुमच्या email वर पाठवतो — PDF attachment सोबत!</div>
+    <label class="modal-label" for="emailInput">Email Address</label>
+    <input type="email" id="emailInput" class="modal-input"
+           placeholder="yourname@gmail.com" autocomplete="email">
+    <label class="modal-check-row">
+      <input type="checkbox" id="attachPdfCheck" checked>
+      <span class="modal-check-label">PDF attachment पण पाठवा</span>
+    </label>
+    <div class="modal-status" id="modalStatus"></div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeEmailModal()">Cancel</button>
+      <button class="modal-send" id="modalSendBtn" onclick="sendEmailSummary()">✉️ Send Email</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let selFile   = null;
+let busy      = false;
+let pdfSectors = {};
+let pdfFilename = '';
+
+const SECTOR_ICONS = {
+  "Polity & Governance":             "🏛️",
+  "Economy & Finance":               "📈",
+  "Environment & Ecology":           "🌿",
+  "Science & Technology":            "🔬",
+  "International Relations":         "🌐",
+  "Social Issues & Welfare":         "🤝",
+  "Defence & Security":              "🛡️",
+  "Health":                          "🏥",
+  "Education":                       "🎓",
+  "Geography & Disaster Management": "🗺️",
+};
+
+const msgsEl    = document.getElementById('messages');
+const welcomeEl = document.getElementById('welcome');
+const inputEl   = document.getElementById('userInput');
+const histEl    = document.getElementById('historyList');
+const fileTagEl = document.getElementById('fileTag');
+const fileLblEl = document.getElementById('fileLabel');
+const genBtnEl  = document.getElementById('genBtn');
+const scrollEl  = document.getElementById('chatScroll');
+
+// ── Utils ──────────────────────────────────────────────────────────────────
+function grow(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 160) + 'px';
+}
+function onKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); doSend(); }
+}
+function setP(txt) { inputEl.value = txt; inputEl.focus(); grow(inputEl); }
+function hideWelcome() { welcomeEl.style.display = 'none'; }
+function toBottom() { scrollEl.scrollTop = scrollEl.scrollHeight; }
+function esc(s) {
+  return String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function fmt(t) {
+  return t
+    .replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')
+    .replace(/^## (.+)/gm,'<h2>$1</h2>')
+    .replace(/^### (.+)/gm,'<h3>$1</h3>')
+    .replace(/^# (.+)/gm,'<h2>$1</h2>')
+    .replace(/^[-•]\s+(.*)/gm,'<li>$1</li>')
+    .replace(/(<li>.*<\/li>\n?)+/g, m => `<ul>${m}</ul>`)
+    .replace(/\n{2,}/g,'</p><p>')
+    .replace(/\n/g,'<br>');
+}
+function getCookie(name) {
+  let v = null;
+  document.cookie.split(';').forEach(c => {
+    const [k, val] = c.trim().split('=');
+    if (k === name) v = decodeURIComponent(val);
+  });
+  return v;
+}
+
+// ── Chat & File helpers ────────────────────────────────────────────────────
+function newChat() {
+  msgsEl.innerHTML = '';
+  welcomeEl.style.display = 'flex';
+  inputEl.value = ''; grow(inputEl);
+  clearFile(); pdfSectors = {}; pdfFilename = '';
+}
+function onFile(inp) {
+  if (!inp.files || !inp.files[0]) return;
+  selFile = inp.files[0]; pdfFilename = selFile.name;
+  fileLblEl.textContent = selFile.name;
+  fileTagEl.style.display = 'flex';
+  genBtnEl.style.display  = 'flex';
+}
+function clearFile() {
+  selFile = null;
+  document.getElementById('pdfInput').value = '';
+  fileTagEl.style.display = 'none';
+  genBtnEl.style.display  = 'none';
+}
+function addHist(label) {
+  const noH = histEl.querySelector('.s-no-hist');
+  if (noH) noH.remove();
+  const d = document.createElement('div');
+  d.className = 's-hist-item';
+  d.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>${esc(label.split(' ').slice(0,5).join(' '))}…</span>`;
+  histEl.insertBefore(d, histEl.firstChild);
+}
+function addUser(txt) {
+  hideWelcome();
+  const row = document.createElement('div');
+  row.className = 'msg-row user';
+  row.innerHTML = `<div class="user-bub">${esc(txt)}</div>`;
+  msgsEl.appendChild(row); toBottom();
+}
+function addTyping() {
+  const row = document.createElement('div');
+  row.className = 'msg-row ai'; row.id = 'typRow';
+  row.innerHTML = `<div class="ai-head"><div class="ai-icon"><img src="/static/logo.png" alt="CA" onerror="this.parentElement.textContent='CA'"></div><span class="ai-name">CAIS</span></div><div class="dots"><span></span><span></span><span></span></div>`;
+  msgsEl.appendChild(row); toBottom();
+}
+function rmTyping() { const t = document.getElementById('typRow'); if (t) t.remove(); }
+function addAI(raw) {
+  rmTyping();
+  const row = document.createElement('div');
+  row.className = 'msg-row ai';
+  row.innerHTML = `<div class="ai-head"><div class="ai-icon"><img src="/static/logo.png" alt="CA" onerror="this.parentElement.textContent='CA'"></div><span class="ai-name">CAIS</span></div><div class="ai-body">${fmt(raw)}</div><div class="msg-acts"><button class="act-btn" onclick="cpAI(this)">Copy</button></div>`;
+  msgsEl.appendChild(row); toBottom();
+}
+
+// ── SECTOR PANEL ───────────────────────────────────────────────────────────
+function buildSectorPanel(filename, sectorsData) {
+  rmTyping(); hideWelcome();
+  const row = document.createElement('div');
+  row.className = 'msg-row ai'; row.id = 'sectorPanelRow';
+  const sectorNames = Object.keys(SECTOR_ICONS);
+  let btns = '';
+  sectorNames.forEach(name => {
+    btns += `<button class="sec-btn" onclick="loadSector('${name}', this)">${SECTOR_ICONS[name]} ${name}</button>`;
+  });
+  row.innerHTML = `
+    <div class="ai-head">
+      <div class="ai-icon"><img src="/static/logo.png" alt="CA" onerror="this.parentElement.textContent='CA'"></div>
+      <span class="ai-name">CAIS</span>
+    </div>
+    <div class="ai-body">
+      <div class="sector-panel">
+        <div class="sector-panel-title">📰 Newspaper Analyzed</div>
+        <div class="sector-panel-file">📄 ${esc(filename)}</div>
+        <p style="font-size:13px;color:#666;margin-bottom:14px;">Select a sector to view detailed notes:</p>
+        <div class="sector-grid">${btns}</div>
+        <div id="sectorDetailArea"></div>
+
+        <!-- ── ACTION BAR: Download PDF + Email ── -->
+        <div class="action-bar" id="actionBar">
+          <span class="action-bar-label">Export:</span>
+          <button class="dl-btn pdf-btn" id="dlPdfBtn" onclick="downloadNotesPDF()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            Download PDF
+          </button>
+          <button class="dl-btn email-btn" onclick="openEmailModal()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+              <polyline points="22,6 12,13 2,6"/>
+            </svg>
+            Email Summary
+          </button>
+        </div>
+
+      </div>
+    </div>`;
+  msgsEl.appendChild(row); toBottom();
+}
+
+async function loadSector(sectorName, btn) {
+  if (busy) return;
+  document.querySelectorAll('.sec-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active', 'loading');
+  const detailArea = document.getElementById('sectorDetailArea');
+  detailArea.innerHTML = `<div class="sector-detail-wrap"><div class="ai-head" style="margin-bottom:8px;"><span style="font-size:20px;">${SECTOR_ICONS[sectorName]}</span><span style="font-size:15px;font-weight:700;margin-left:8px;">${esc(sectorName)}</span></div><div class="dots"><span></span><span></span><span></span></div></div>`;
+  toBottom();
+
+  // Cache hit
+  if (pdfSectors[sectorName] && pdfSectors[sectorName].length > 100) {
+    btn.classList.remove('loading');
+    showSectorContent(sectorName, pdfSectors[sectorName]);
+    return;
+  }
+
+  busy = true;
+  try {
+    const r = await fetch('/sector', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sector: sectorName })
+    });
+    const d = await r.json();
+    btn.classList.remove('loading');
+    if (d.detail) {
+      pdfSectors[sectorName] = d.detail;
+      showSectorContent(sectorName, d.detail);
+      // Action bar दाखवा — कमीत कमी 1 sector loaded झाला
+      const bar = document.getElementById('actionBar');
+      if (bar) bar.classList.add('visible');
+    } else {
+      showSectorContent(sectorName, d.error || 'Could not load notes.');
+    }
+  } catch(e) {
+    btn.classList.remove('loading');
+    showSectorContent(sectorName, 'Connection error. Please try again.');
+  }
+  busy = false;
+}
+
+function showSectorContent(sectorName, content) {
+  const detailArea = document.getElementById('sectorDetailArea');
+  detailArea.innerHTML = `
+    <div class="sector-detail-wrap">
+      <div class="sector-detail-header">
+        <div class="sector-detail-title">
+          <span>${SECTOR_ICONS[sectorName]}</span>
+          <span>${esc(sectorName)}</span>
+        </div>
+        <button class="back-btn" onclick="closeSectorDetail()">✕ Close</button>
+      </div>
+      <div class="ai-body">${fmt(content)}</div>
+      <div style="margin-top:12px;display:flex;gap:8px;">
+        <button class="act-btn" onclick="cpSector(this)">Copy Notes</button>
+      </div>
+    </div>`;
+  toBottom();
+}
+
+function closeSectorDetail() {
+  document.getElementById('sectorDetailArea').innerHTML = '';
+  document.querySelectorAll('.sec-btn').forEach(b => b.classList.remove('active'));
+}
+function cpSector(btn) {
+  const body = btn.closest('.sector-detail-wrap').querySelector('.ai-body');
+  navigator.clipboard.writeText(body.innerText).then(() => {
+    btn.textContent = '✓ Copied'; setTimeout(() => btn.textContent = 'Copy Notes', 1500);
+  });
+}
+function cpAI(btn) {
+  const body = btn.closest('.msg-row').querySelector('.ai-body');
+  navigator.clipboard.writeText(body.innerText).then(() => {
+    btn.textContent = '✓ Copied'; setTimeout(() => btn.textContent = 'Copy', 1500);
+  });
+}
+
+// ── DOWNLOAD PDF ───────────────────────────────────────────────────────────
+async function downloadNotesPDF() {
+  const btn = document.getElementById('dlPdfBtn');
+  if (!btn) return;
+
+  btn.disabled = true;
+  btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg> Generating…`;
+
+  try {
+    const response = await fetch('/download-notes/', {
+      method: 'GET',
+      headers: { 'X-CSRFToken': getCookie('csrftoken') }
+    });
+
+    if (!response.ok) {
+      const text = await response.text();
+      alert('PDF Error: ' + text);
+      return;
+    }
+
+    // File download trigger करा
+    const blob = await response.blob();
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = `CAIS_Notes_${new Date().toLocaleDateString('en-GB').replace(/\//g,'_')}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+
+    btn.innerHTML = `✓ Downloaded!`;
+    setTimeout(() => {
+      btn.disabled = false;
+      btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download PDF`;
+    }, 2500);
+
+  } catch(e) {
+    alert('Download failed. Django server चालू आहे का?');
+    btn.disabled = false;
+    btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download PDF`;
+  }
+}
+
+// ── EMAIL MODAL ────────────────────────────────────────────────────────────
+function openEmailModal() {
+  document.getElementById('emailModal').classList.add('open');
+  document.getElementById('emailInput').focus();
+  document.getElementById('modalStatus').textContent = '';
+  document.getElementById('modalStatus').className = 'modal-status';
+  document.getElementById('modalSendBtn').disabled = false;
+  document.getElementById('modalSendBtn').textContent = '✉️ Send Email';
+}
+function closeEmailModal() {
+  document.getElementById('emailModal').classList.remove('open');
+}
+
+async function sendEmailSummary() {
+  const email     = document.getElementById('emailInput').value.trim();
+  const attachPdf = document.getElementById('attachPdfCheck').checked;
+  const statusEl  = document.getElementById('modalStatus');
+  const sendBtn   = document.getElementById('modalSendBtn');
+
+  if (!email || !email.includes('@')) {
+    statusEl.className = 'modal-status err';
+    statusEl.textContent = '⚠️ Valid email address टाका';
+    return;
+  }
+
+  sendBtn.disabled = true;
+  sendBtn.textContent = '⏳ Sending…';
+  statusEl.className = 'modal-status';
+  statusEl.textContent = 'Email तयार करतोय…';
+
+  try {
+    const res = await fetch('/send-email/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCookie('csrftoken'),
+      },
+      body: JSON.stringify({ email, attach_pdf: attachPdf }),
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      statusEl.className = 'modal-status ok';
+      statusEl.textContent = `✅ Email पाठवला! Inbox check करा.`;
+      sendBtn.textContent = '✓ Sent!';
+      setTimeout(closeEmailModal, 2200);
+    } else {
+      statusEl.className = 'modal-status err';
+      statusEl.textContent = `❌ ${data.message}`;
+      sendBtn.disabled = false;
+      sendBtn.textContent = '✉️ Send Email';
+    }
+  } catch(e) {
+    statusEl.className = 'modal-status err';
+    statusEl.textContent = '❌ Network error. Django server check करा.';
+    sendBtn.disabled = false;
+    sendBtn.textContent = '✉️ Send Email';
+  }
+}
+
+// Close modal on backdrop click
+document.getElementById('emailModal').addEventListener('click', function(e) {
+  if (e.target === this) closeEmailModal();
+});
+// Enter key in email input
+document.getElementById('emailInput').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') sendEmailSummary();
+});
+
+// ── SEND CHAT ──────────────────────────────────────────────────────────────
+async function doSend() {
+  const txt = inputEl.value.trim();
+  if (!txt || busy) return;
+  busy = true; inputEl.value = ''; grow(inputEl);
+  addHist(txt); addUser(txt); addTyping();
+  try {
+    const r = await fetch('/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: txt })
+    });
+    const d = await r.json();
+    addAI(d.reply || 'Could not get a response.');
+  } catch { addAI('Connection error. Please try again.'); }
+  busy = false;
+}
+
+// ── UPLOAD PDF ─────────────────────────────────────────────────────────────
+async function doUpload() {
+  if (!selFile || busy) return;
+  busy = true; hideWelcome();
+  addHist('📎 ' + selFile.name);
+  const ur = document.createElement('div');
+  ur.className = 'msg-row user';
+  ur.innerHTML = `<div class="user-bub">📎 ${esc(selFile.name)}</div>`;
+  msgsEl.appendChild(ur); addTyping(); toBottom();
+
+  const form = new FormData();
+  form.append('pdf', selFile);
+  try {
+    const r = await fetch('/upload', { method: 'POST', body: form });
+    const d = await r.json();
+    if (d.error) addAI('❌ ' + d.error);
+    else if (d.sectors) {
+      if (typeof d.sectors === 'object' && !d.sectors._raw) pdfSectors = d.sectors;
+      buildSectorPanel(d.filename || selFile.name, d.sectors);
+    } else addAI(d.notes || 'Could not generate notes.');
+  } catch(e) { addAI('Upload failed. Please try again.'); }
+  clearFile(); busy = false;
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,251 @@
+"""
+CAIS - Daily Summary Email Service
+chatbot/email_service.py म्हणून save करा
+
+.env मध्ये हे add करा:
+EMAIL_HOST_USER=your_gmail@gmail.com
+EMAIL_HOST_PASSWORD=your_app_password   ← Gmail App Password (16 chars)
+SUMMARY_RECIPIENTS=student1@gmail.com,student2@gmail.com
+"""
+
+import smtplib
+import os
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from email.mime.application import MIMEApplication
+from datetime import datetime
+from dotenv import load_dotenv
+
+load_dotenv()
+
+# ─── Config ───────────────────────────────────────────────────────────────────
+
+GMAIL_USER     = os.environ.get('EMAIL_HOST_USER', '')
+GMAIL_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')   # App Password
+RECIPIENTS     = os.environ.get('SUMMARY_RECIPIENTS', '')    # comma-separated
+
+
+# ─── HTML Email Template ──────────────────────────────────────────────────────
+
+def _build_html_email(sector_notes: dict, newspaper_date: str, newspaper_name: str) -> str:
+    """Build a beautiful HTML email with sector summaries."""
+
+    SECTOR_COLORS = {
+        'Polity & Governance':        '#1565C0',
+        'Economy & Finance':          '#2E7D32',
+        'International Relations':    '#6A1B9A',
+        'Environment & Ecology':      '#00695C',
+        'Science & Technology':       '#E65100',
+        'Health & Social Issues':     '#C62828',
+        'Defence & Security':         '#37474F',
+        'Geography & Disaster Mgmt':  '#4E342E',
+        'Art, Culture & Heritage':    '#AD1457',
+        'Education & Sports':         '#00838F',
+    }
+
+    def notes_to_html(text):
+        """Convert markdown-ish notes to simple HTML."""
+        lines = []
+        for line in text.split('\n'):
+            line = line.strip()
+            if not line:
+                lines.append('<br>')
+            elif line.startswith('### ') or line.startswith('## '):
+                heading = line.lstrip('#').strip()
+                lines.append(f'<h4 style="margin:10px 0 4px 0;color:#333">{heading}</h4>')
+            elif line.startswith('- ') or line.startswith('* '):
+                content = line[2:].replace('**', '<b>').replace('**', '</b>')
+                lines.append(f'<li style="margin-bottom:3px">{content}</li>')
+            else:
+                content = line.replace('**', '<b>').replace('**', '</b>')
+                lines.append(f'<p style="margin:3px 0">{content}</p>')
+        return '\n'.join(lines)
+
+    sectors_html = ''
+    for sector, notes in sector_notes.items():
+        if not notes or not notes.strip():
+            continue
+        color = SECTOR_COLORS.get(sector, '#37474F')
+        notes_html = notes_to_html(notes)
+        sectors_html += f"""
+        <div style="margin-bottom:24px;border-radius:8px;overflow:hidden;
+                    box-shadow:0 1px 4px rgba(0,0,0,0.12)">
+            <div style="background:{color};color:white;padding:10px 16px;
+                        font-size:15px;font-weight:bold">
+                {sector}
+            </div>
+            <div style="padding:14px 16px;background:#fafafa;
+                        font-size:13px;color:#333;line-height:1.6">
+                {notes_html}
+            </div>
+        </div>
+        """
+
+    return f"""
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="margin:0;padding:0;background:#f0f2f5;font-family:Arial,sans-serif">
+
+  <div style="max-width:680px;margin:24px auto;background:white;
+              border-radius:12px;overflow:hidden;
+              box-shadow:0 2px 12px rgba(0,0,0,0.10)">
+
+    <!-- Header -->
+    <div style="background:linear-gradient(135deg,#1a237e,#3949ab);
+                padding:28px 24px;text-align:center">
+      <h1 style="color:white;margin:0;font-size:26px;letter-spacing:1px">CAIS</h1>
+      <p style="color:#C5CAE9;margin:4px 0 0 0;font-size:13px">
+        Current Affairs Intelligence System
+      </p>
+    </div>
+
+    <!-- Date Banner -->
+    <div style="background:#E8EAF6;text-align:center;padding:10px;
+                font-size:13px;color:#3949ab;font-weight:bold">
+      📰 {newspaper_name} &nbsp;•&nbsp; {newspaper_date} &nbsp;•&nbsp;
+      Daily Current Affairs Summary
+    </div>
+
+    <!-- Exam Tags -->
+    <div style="text-align:center;padding:12px;background:#fff">
+      {''.join(f'<span style="display:inline-block;background:#E8EAF6;color:#1a237e;'
+               f'padding:3px 10px;border-radius:12px;margin:3px;font-size:12px;'
+               f'font-weight:bold">{exam}</span>'
+               for exam in ['UPSC', 'MPSC', 'SSC', 'Banking', 'Railway', 'NDA/CDS'])}
+    </div>
+
+    <!-- Sector Notes -->
+    <div style="padding:20px 24px">
+      {sectors_html}
+    </div>
+
+    <!-- Footer -->
+    <div style="background:#f5f5f5;padding:16px 24px;text-align:center;
+                border-top:1px solid #eee">
+      <p style="margin:0;font-size:11px;color:#888">
+        Generated by CAIS &nbsp;•&nbsp;
+        {datetime.now().strftime('%d %B %Y, %I:%M %p')}<br>
+        Keep studying! Best of luck for your exams 📚
+      </p>
+    </div>
+
+  </div>
+
+</body>
+</html>
+"""
+
+
+# ─── Plain text fallback ──────────────────────────────────────────────────────
+
+def _build_plain_text(sector_notes: dict, newspaper_date: str, newspaper_name: str) -> str:
+    lines = [
+        'CAIS - Current Affairs Intelligence System',
+        f'{newspaper_name} | {newspaper_date}',
+        '=' * 60,
+        '',
+    ]
+    for sector, notes in sector_notes.items():
+        if not notes or not notes.strip():
+            continue
+        lines.append(f'\n[{sector.upper()}]')
+        lines.append('-' * 40)
+        lines.append(notes[:1000])  # trim for plain text
+        lines.append('')
+    lines.append('\nGenerated by CAIS | For UPSC/MPSC/SSC/Banking/Railway/Defence')
+    return '\n'.join(lines)
+
+
+# ─── Main send function ───────────────────────────────────────────────────────
+
+def send_daily_summary_email(
+    sector_notes: dict,
+    newspaper_date: str = None,
+    newspaper_name: str = 'Indian Express',
+    to_emails: list = None,
+    attach_pdf: bytes = None,
+) -> dict:
+    """
+    Send daily current affairs summary email via Gmail.
+
+    Args:
+        sector_notes:    dict {sector_name: notes_text}
+        newspaper_date:  e.g. '16 March 2026'
+        newspaper_name:  source newspaper name
+        to_emails:       list of recipient emails (overrides .env if provided)
+        attach_pdf:      optional PDF bytes to attach
+
+    Returns:
+        {'success': True, 'message': '...', 'sent_to': [...]}
+
+    Usage in views.py:
+        from chatbot.email_service import send_daily_summary_email
+
+        result = send_daily_summary_email(
+            sector_notes=request.session.get('sector_notes', {}),
+            newspaper_date=request.session.get('newspaper_date', ''),
+            to_emails=[request.user.email],
+        )
+    """
+
+    if not GMAIL_USER or not GMAIL_PASSWORD:
+        return {
+            'success': False,
+            'message': '.env मध्ये EMAIL_HOST_USER आणि EMAIL_HOST_PASSWORD नाही!'
+        }
+
+    date_str = newspaper_date or datetime.now().strftime('%d %B %Y')
+
+    # Recipients
+    recipients = to_emails or []
+    if not recipients and RECIPIENTS:
+        recipients = [e.strip() for e in RECIPIENTS.split(',') if e.strip()]
+    if not recipients:
+        return {'success': False, 'message': 'कोणताही recipient email नाही!'}
+
+    subject = f'📰 CAIS Daily Notes | {newspaper_name} | {date_str}'
+
+    # Build email
+    msg = MIMEMultipart('alternative')
+    msg['Subject'] = subject
+    msg['From']    = f'CAIS Current Affairs <{GMAIL_USER}>'
+    msg['To']      = ', '.join(recipients)
+
+    # Attach plain text + HTML
+    plain = _build_plain_text(sector_notes, date_str, newspaper_name)
+    html  = _build_html_email(sector_notes, date_str, newspaper_name)
+    msg.attach(MIMEText(plain, 'plain', 'utf-8'))
+    msg.attach(MIMEText(html, 'html', 'utf-8'))
+
+    # Attach PDF if provided
+    if attach_pdf:
+        pdf_part = MIMEApplication(attach_pdf, _subtype='pdf')
+        pdf_part.add_header(
+            'Content-Disposition', 'attachment',
+            filename=f'CAIS_Notes_{date_str.replace(" ", "_")}.pdf'
+        )
+        msg.attach(pdf_part)
+
+    # Send via Gmail SMTP
+    try:
+        with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
+            server.login(GMAIL_USER, GMAIL_PASSWORD)
+            server.sendmail(GMAIL_USER, recipients, msg.as_string())
+
+        return {
+            'success': True,
+            'message': f'Email पाठवला! ✅',
+            'sent_to': recipients,
+        }
+    except smtplib.SMTPAuthenticationError:
+        return {
+            'success': False,
+            'message': (
+                'Gmail authentication failed! '
+                'App Password वापरा — myaccount.google.com → Security → '
+                'App Passwords → Generate करा'
+            ),
+        }
+    except Exception as e:
+        return {'success': False, 'message': f'Error: {str(e)}'}
