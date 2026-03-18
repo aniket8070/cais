@@ -33,6 +33,11 @@ ALLOWED_HOSTS = [
     'cais-production.up.railway.app',
 ]
 
+CSRF_TRUSTED_ORIGINS = [
+    'https://cais-production.up.railway.app',
+    'https://*.railway.app',
+]
+
 
 # Application definition
 
