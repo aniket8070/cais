@@ -3,13 +3,7 @@
 > **AI-Powered Daily News Analyzer for Competitive Exam Students**  
 > Upload any newspaper PDF → OCR extraction → LLaMA 3.3 generates sector-wise study notes for UPSC, MPSC, SSC, Banking, Railway exams.
 
----
-
-## 🚀 Live Demo
-
-🔗 **Deployed on Railway:** [cais-production.up.railway.app](https://cais-production.up.railway.app)
-
----
+--
 
 ## 📸 Features
 
